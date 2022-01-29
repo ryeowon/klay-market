@@ -1,23 +1,25 @@
-import logo from './logo.svg';
-import './App.css';
+import { getBalance, readCount, setCount } from "./api/UseCaver";
+import React, { useState } from "react";
+import * as KlipAPI from "./api/UseKilp";
+import QRCode from "qrcode.react";
+
+const DEFAULT_QR_CODE = "DEFAULT";
 
 function App() {
+  const [balance, setBalance] = useState("0");
+  const [qrvalue, setQrvalue] = useState(DEFAULT_QR_CODE);
+
+  const onClickgetAddress = () => {
+    KlipAPI.getAddress(setQrvalue);
+  };
+
+  readCount();
+  getBalance("0x6867ea7ff72efa74da0a1f4c9aa52e7215a84029");
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <button onClick={onClickgetAddress}>주소 가져오기</button>
+      <br />
+      <QRCode value={qrvalue} />
     </div>
   );
 }
