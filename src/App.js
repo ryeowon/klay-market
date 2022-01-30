@@ -9,10 +9,10 @@ import "./market.css";
 import { MARKET_CONTRACT_ADDRESS } from "./constants";
 
 const DEFAULT_QR_CODE = "DEFAULT";
-const DEFAULT_ADDRESS = "0x000000000000000000000000000000000000000";
+const DEFAULT_ADDRESS = "0x2bc2C46165b64A3AF6A257B9fF882A1f7BeBc327";
 
 function App() {
-  const [nfts, setNfts] = useState([]); // {tokenId: '101', tokenUri = ' '}
+  const [nfts, setNfts] = useState([]); // {id: '101', uri = ' '}
   const [myBalance, setMyBalance] = useState("0");
   const [myAddress, setMyAddress] = useState(DEFAULT_ADDRESS);
 
@@ -58,6 +58,26 @@ function App() {
     }
   };
 
+  const onClickCard = (id) => {
+    if (tab == "WALLET") {
+      onClickMyCard(id);
+    } else if (tab == "MARKET") {
+      onClickMarketCard(id);
+    }
+  };
+
+  const onClickMyCard = (tokenId) => {
+    KlipAPI.listingCard(myAddress, tokenId, setQrvalue, (result) => {
+      alert(JSON.stringify(result));
+    });
+  };
+
+  const onClickMarketCard = (tokenId) => {
+    KlipAPI.buyCard(tokenId, setQrvalue, (result) => {
+      alert(JSON.stringify(result));
+    });
+  };
+
   return (
     <div className="App">
       <div style={{ backgroundColor: "black", padding: 10 }}>
@@ -73,12 +93,14 @@ function App() {
         </Alert>
         {tab === "MARKET" || tab === "WALLET" ? (
           <div className="container">
-            {nfts.map((nft, idx) => {
+            {nfts.map((nft, index) => {
               return (
                 <Card.Img
+                  key={`imagekey${index}`}
+                  onClick={() => onClickCard(nft.id)}
                   style={{ width: 300 }}
                   className="img-responsive"
-                  src={nfts[idx].uri}
+                  src={nft.uri}
                 />
               );
             })}
@@ -132,10 +154,6 @@ function App() {
       >
         <QRCode value={qrvalue} size={256} style={{ margin: "auto" }} />
       </Container>
-      <button style={{ color: "white" }} onClick={fetchMyNFTs}>
-        aaa
-      </button>
-
       <nav
         style={{ backgroundColor: "#1b1717", height: 45 }}
         className="navbar fixed-bottom-navbar-light"
