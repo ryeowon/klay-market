@@ -3,13 +3,13 @@ import React, { useState } from "react";
 import * as KlipAPI from "./api/UseKilp";
 import QRCode from "qrcode.react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Alert, Card, Container } from "react-bootstrap";
+import { Alert, Button, Card, Container, Form, Nav } from "react-bootstrap";
 import "./App.css";
 import "./market.css";
 import { MARKET_CONTRACT_ADDRESS } from "./constants";
 
 const DEFAULT_QR_CODE = "DEFAULT";
-const DEFAULT_ADDRESS = "0x00";
+const DEFAULT_ADDRESS = "0x000000000000000000000000000000000000000";
 
 function App() {
   const [nfts, setNfts] = useState([]); // {tokenId: '101', tokenUri = ' '}
@@ -17,14 +17,9 @@ function App() {
   const [myAddress, setMyAddress] = useState(DEFAULT_ADDRESS);
 
   const [qrvalue, setQrvalue] = useState(DEFAULT_QR_CODE);
+  const [tab, setTab] = useState("MARKET"); // MARKET, MINT, WALLET
+  const [mintImageUrl, setMintImageUrl] = useState("");
 
-  // fetchMarketNFTs
-  // fetchMyNFTs
-  // onClickMint
-  // onClickMyCard
-  // onClickMarktetCard
-  // getUserData
-  // getBalance
   const fetchMarketNFTs = async () => {
     const _nfts = await fetchCardsOf(MARKET_CONTRACT_ADDRESS);
     setNfts(_nfts);
@@ -47,6 +42,22 @@ function App() {
     });
   };
 
+  const onClickMint = async (uri) => {
+    if (myAddress === DEFAULT_ADDRESS) alert("NO ADDRESS");
+    else {
+      const randomTokenId = parseInt(Math.random() * 10000000);
+      KlipAPI.MintCardWithURI(
+        myAddress,
+        randomTokenId,
+        uri,
+        setQrvalue,
+        (result) => {
+          alert(JSON.stringify(result));
+        }
+      );
+    }
+  };
+
   return (
     <div className="App">
       <div style={{ backgroundColor: "black", padding: 10 }}>
@@ -60,12 +71,55 @@ function App() {
         >
           {myBalance}KLAY
         </Alert>
-
-        <div className="container">
-          {nfts.map((nft, idx) => {
-            return <Card.Img className="img-responsive" src={nfts[idx].uri} />;
-          })}
-        </div>
+        {tab === "MARKET" || tab === "WALLET" ? (
+          <div className="container">
+            {nfts.map((nft, idx) => {
+              return (
+                <Card.Img
+                  style={{ width: 300 }}
+                  className="img-responsive"
+                  src={nfts[idx].uri}
+                />
+              );
+            })}
+          </div>
+        ) : null}
+        {tab === "MINT" ? (
+          <div className="container" style={{ padding: 0, width: "100%" }}>
+            <Card
+              className="text-center"
+              style={{ color: "black", height: "50%", borderColor: "#C5B358" }}
+            >
+              <Card.Body style={{ opacity: 0.9, backgroundColor: "black" }}>
+                {mintImageUrl !== "" ? (
+                  <Card.Img src={mintImageUrl} height={"50%"} />
+                ) : null}
+                <Form>
+                  <Form.Group>
+                    <Form.Control
+                      value={mintImageUrl}
+                      onChange={(e) => {
+                        setMintImageUrl(e.target.value);
+                      }}
+                      type="text"
+                      placeholder="이미지 주소를 입력해주세요"
+                    />
+                  </Form.Group>
+                  <Button
+                    onClick={() => onClickMint(mintImageUrl)}
+                    variant="primary"
+                    style={{
+                      backgroundColor: "#810034",
+                      borderColor: "#810034",
+                    }}
+                  >
+                    발행하기
+                  </Button>
+                </Form>
+              </Card.Body>
+            </Card>
+          </div>
+        ) : null}
       </div>
 
       <Container
@@ -81,6 +135,43 @@ function App() {
       <button style={{ color: "white" }} onClick={fetchMyNFTs}>
         aaa
       </button>
+
+      <nav
+        style={{ backgroundColor: "#1b1717", height: 45 }}
+        className="navbar fixed-bottom-navbar-light"
+        role="navigation"
+      >
+        <Nav className="w-100">
+          <div className="d-flex flex-row justify-content-around w-100">
+            <div
+              onClick={() => {
+                setTab("MARKET");
+                fetchMarketNFTs();
+              }}
+              className="row d-flex flex-column justify-content-center align-items-center"
+            >
+              <div>MARKET</div>
+            </div>
+            <div
+              onClick={() => {
+                setTab("MINT");
+              }}
+              className="row d-flex flex-column justify-content-center align-items-center"
+            >
+              <div>MINT</div>
+            </div>
+            <div
+              onClick={() => {
+                setTab("WALLET");
+                fetchMyNFTs();
+              }}
+              className="row d-flex flex-column justify-content-center align-items-center"
+            >
+              <div>WALLET</div>
+            </div>
+          </div>
+        </Nav>
+      </nav>
     </div>
   );
 }
