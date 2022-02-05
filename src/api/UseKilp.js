@@ -7,6 +7,20 @@ import {
 
 const A2A_API_PREPARE_URL = "https://a2a-api.klipwallet.com/v2/a2a/prepare";
 const APP_NAME = "KLAY_MARKET";
+const isMobile = window.screen.width >= 1280 ? false : true;
+
+const getKlipAccessUrl = (method, request_key) => {
+  if (method === "QR")
+    return `https://klipwallet.com/?target=/a2a?request_key=${request_key}`;
+  
+  if (method === "iOS")
+    return `kakaotalk://klipwallet/open?url=https://klipwallet.com/?target=/a2a?request_key=${request_key}`
+  
+  if (method === "android")
+    return `intent://klipwallet/open?url=https://klipwallet.com/?target=/a2a?request_key=${request_key}#Intent;scheme=kakaotalk;package=com.kakao.talk;end`
+
+  return `kakaotalk://klipwallet/open?url=https://klipwallet.com/?target=/a2a?request_key=${request_key}`
+}
 
 export const buyCard = async (tokenId, setQrvalue, callback) => {
   const functionJson = `{ "constant": false, "inputs": [ { "name": "tokenId", "type": "uint256" }, { "name": "NFTAddress", "type": "address" } ], "name": "buyNFT", "outputs": [ { "name": "", "type": "bool" } ], "payable": true, "stateMutability": "payable", "type": "function" }`;
@@ -78,8 +92,13 @@ export const executeContract = (
     })
     .then((response) => {
       const { request_key } = response.data;
-      const qrcode = `https://klipwallet.com/?target=/a2a?request_key=${request_key}`;
-      setQrvalue(qrcode);
+
+      if (isMobile) {
+        window.location.href = getKlipAccessUrl("android", request_key);
+      } else {
+        setQrvalue(getKlipAccessUrl("QR", request_key));
+      }
+
       let timerId = setInterval(() => {
         axios
           .get(
@@ -93,6 +112,7 @@ export const executeContract = (
               );
               callback(res.data.result);
               clearInterval(timerId);
+              setQrvalue("DEFAULT");
             }
           });
       }, 1000);
@@ -109,8 +129,11 @@ export const getAddress = (setQrvalue, callback) => {
     })
     .then((response) => {
       const { request_key } = response.data;
-      const qrcode = `https://klipwallet.com/?target=/a2a?request_key=${request_key}`;
-      setQrvalue(qrcode);
+      if (isMobile) {
+        window.location.href = getKlipAccessUrl("android", request_key);
+      } else {
+        setQrvalue(getKlipAccessUrl("QR", request_key));
+      }
       let timerId = setInterval(() => {
         axios
           .get(
@@ -121,6 +144,7 @@ export const getAddress = (setQrvalue, callback) => {
               console.log("result", JSON.stringify(res.data.result));
               callback(res.data.result.klaytn_address);
               clearInterval(timerId);
+              setQrvalue("DEFAULT");
             }
           });
       }, 1000);
